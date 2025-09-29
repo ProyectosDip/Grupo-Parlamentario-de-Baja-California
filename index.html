@@ -1,0 +1,2767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grupo Parlamentario de Baja California - GPMBC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .gradient-primary {
+            background: linear-gradient(135deg, #7c2d12 0%, #991b1b 50%, #dc2626 100%);
+        }
+        .gradient-secondary {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        }
+        .gradient-gold {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #fde047 100%);
+        }
+        .text-primary {
+            color: #7c2d12;
+        }
+        .text-secondary {
+            color: #d97706;
+        }
+        .bg-primary {
+            background-color: #7c2d12;
+        }
+        .bg-secondary {
+            background-color: #d97706;
+        }
+        .border-primary {
+            border-color: #7c2d12;
+        }
+        .border-secondary {
+            border-color: #d97706;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .nav-active {
+            border-bottom: 3px solid #d97706;
+            color: #d97706;
+        }
+        .deputy-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        .agenda-item {
+            border-left: 4px solid #3b82f6;
+            background: linear-gradient(90deg, #eff6ff 0%, #ffffff 100%);
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Sistema de Notificaciones -->
+    <div id="notification" class="notification bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- Header Principal -->
+    <header class="gradient-primary text-white shadow-xl">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-6">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+                        <span class="text-primary font-bold text-2xl">BC</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold">Grupo Parlamentario de Baja California</h1>
+                        <p class="text-red-100 text-lg">Transparencia • Trabajo • Cercanía Ciudadana</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="userInfo" class="hidden text-right">
+                        <p class="text-sm text-blue-100">Sesión activa</p>
+                        <p id="userName" class="font-semibold text-lg"></p>
+                    </div>
+                    <button id="loginBtn" onclick="showLoginModal()" class="bg-white text-primary px-6 py-3 rounded-lg hover:bg-yellow-50 transition-all font-semibold shadow-lg">
+                        Acceso Diputados
+                    </button>
+                    <button id="logoutBtn" onclick="logout()" class="hidden bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-all font-semibold">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación Principal -->
+    <nav class="bg-white shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-6">
+            <div class="flex space-x-8 overflow-x-auto">
+                <button onclick="showSection('inicio')" class="nav-btn py-4 px-4 border-b-3 border-transparent hover:border-secondary transition-all whitespace-nowrap font-medium">
+                    🏠 Inicio
+                </button>
+                <button onclick="showSection('diputados')" class="nav-btn py-4 px-4 border-b-3 border-transparent hover:border-secondary transition-all whitespace-nowrap font-medium">
+                    👥 Nuestros Diputados
+                </button>
+                <button onclick="showSection('agenda')" class="nav-btn py-4 px-4 border-b-3 border-transparent hover:border-secondary transition-all whitespace-nowrap font-medium">
+                    📅 Agenda Semanal
+                </button>
+                <button onclick="showSection('actividades')" class="nav-btn py-4 px-4 border-b-3 border-transparent hover:border-secondary transition-all whitespace-nowrap font-medium">
+                    📋 Actividades del Grupo
+                </button>
+                <button onclick="showSection('contacto')" class="nav-btn py-4 px-4 border-b-3 border-transparent hover:border-secondary transition-all whitespace-nowrap font-medium">
+                    📧 Contacto Ciudadano
+                </button>
+                <button id="adminNavBtn" onclick="showSection('admin')" class="nav-btn hidden py-4 px-4 border-b-3 border-transparent hover:border-secondary transition-all whitespace-nowrap font-medium text-secondary">
+                    ⚙️ Panel de Gestión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Modal de Login -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">🔐</span>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Acceso para Diputados</h2>
+                <p class="text-gray-600 mt-2">Ingrese sus credenciales para acceder al panel de gestión</p>
+            </div>
+            <form onsubmit="login(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Seleccionar Diputado</label>
+                    <select id="loginUser" class="w-full p-4 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="ana.martinez">Dip. Ana Martínez López</option>
+                        <option value="carlos.rodriguez">Dip. Carlos Rodríguez Hernández</option>
+                        <option value="maria.lopez">Dip. María López García</option>
+                        <option value="jorge.garcia">Dip. Jorge García Mendoza</option>
+                        <option value="laura.hernandez">Dip. Laura Hernández Torres</option>
+                        <option value="roberto.sanchez">Dip. Roberto Sánchez Ruiz</option>
+                        <option value="patricia.torres">Dip. Patricia Torres Vázquez</option>
+                        <option value="miguel.vazquez">Dip. Miguel Vázquez Flores</option>
+                        <option value="sofia.flores">Dip. Sofía Flores Morales</option>
+                    </select>
+                </div>
+                <div class="mb-8">
+                    <label class="block text-sm font-medium mb-2">Contraseña</label>
+                    <input type="password" id="loginPassword" class="w-full p-4 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required placeholder="Ingrese su contraseña">
+                    <p class="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded">💡 Demo: use "gpmbc2024" para cualquier diputado</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition-all font-semibold">
+                        Iniciar Sesión
+                    </button>
+                    <button type="button" onclick="hideLoginModal()" class="flex-1 bg-gray-500 text-white py-4 rounded-lg hover:bg-gray-600 transition-all font-semibold">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Sección Inicio -->
+        <section id="inicio" class="section-content fade-in">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-bold text-gray-800 mb-6">Bienvenidos al GPMBC</h2>
+                <p class="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                    Somos 9 diputados comprometidos con el desarrollo de Baja California. 
+                    Trabajamos con transparencia, cercanía ciudadana y dedicación al servicio público.
+                </p>
+            </div>
+
+            <!-- Estadísticas Destacadas -->
+            <div class="grid md:grid-cols-4 gap-8 mb-16">
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center card-hover border-l-4 border-primary">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <div class="text-4xl font-bold text-primary mb-2">9</div>
+                    <p class="text-gray-600 font-medium">Diputados Activos</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center card-hover border-l-4 border-secondary">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📋</span>
+                    </div>
+                    <div class="text-4xl font-bold text-secondary mb-2">47</div>
+                    <p class="text-gray-600 font-medium">Iniciativas Presentadas</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center card-hover border-l-4 border-primary">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">⚖️</span>
+                    </div>
+                    <div class="text-4xl font-bold text-primary mb-2">23</div>
+                    <p class="text-gray-600 font-medium">Leyes Aprobadas</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center card-hover border-l-4 border-secondary">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🤝</span>
+                    </div>
+                    <div class="text-4xl font-bold text-secondary mb-2">1,247</div>
+                    <p class="text-gray-600 font-medium">Ciudadanos Atendidos</p>
+                </div>
+            </div>
+
+            <!-- Actividades Recientes -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-16">
+                <h3 class="text-3xl font-bold mb-8 text-center">Actividades Recientes del Grupo</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4 p-6 bg-blue-50 rounded-xl">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                📊
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg mb-2">Sesión Plenaria Extraordinaria</h4>
+                                <p class="text-gray-600 mb-3">Aprobación del Presupuesto de Egresos 2025 con participación de los 9 diputados del grupo.</p>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-blue-600 font-medium">Hace 1 día</span>
+                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4 p-6 bg-green-50 rounded-xl">
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                                🎯
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg mb-2">Mesa de Trabajo Interpartidista</h4>
+                                <p class="text-gray-600 mb-3">Coordinación con otros grupos parlamentarios para reformas en materia de transparencia.</p>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-green-600 font-medium">Hace 3 días</span>
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">En proceso</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4 p-6 bg-purple-50 rounded-xl">
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                🏛️
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg mb-2">Foro Ciudadano de Consulta</h4>
+                                <p class="text-gray-600 mb-3">Participación de 200+ ciudadanos en consulta sobre reformas educativas.</p>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-purple-600 font-medium">Hace 1 semana</span>
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">Exitoso</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4 p-6 bg-yellow-50 rounded-xl">
+                            <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">
+                                📢
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg mb-2">Conferencia de Prensa Conjunta</h4>
+                                <p class="text-gray-600 mb-3">Presentación de avances legislativos del primer semestre 2024.</p>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-yellow-600 font-medium">Hace 2 semanas</span>
+                                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">Publicado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accesos Rápidos -->
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center card-hover">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-3xl">👥</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Conoce a los Diputados</h3>
+                    <p class="text-gray-600 mb-6">Explora los perfiles, especialidades y trabajo de cada uno de nuestros 9 diputados.</p>
+                    <button onclick="showSection('diputados')" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-red-800 transition-all font-semibold">
+                        Ver Diputados
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center card-hover">
+                    <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-3xl">📅</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Agenda de Trabajo</h3>
+                    <p class="text-gray-600 mb-6">Consulta las actividades programadas y la agenda semanal del grupo parlamentario.</p>
+                    <button onclick="showSection('agenda')" class="w-full bg-secondary text-white py-3 rounded-lg hover:bg-yellow-600 transition-all font-semibold">
+                        Ver Agenda
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center card-hover">
+                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-3xl">📧</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Contacto Directo</h3>
+                    <p class="text-gray-600 mb-6">Comunícate directamente con cualquier diputado para propuestas o consultas.</p>
+                    <button onclick="showSection('contacto')" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-red-800 transition-all font-semibold">
+                        Contactar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Diputados -->
+        <section id="diputados" class="section-content hidden fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-6">Nuestros 9 Diputados</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Cada diputado aporta experiencia única y especialización en diferentes áreas del desarrollo estatal.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8" id="deputiesGrid">
+                <!-- Los diputados se cargarán dinámicamente -->
+            </div>
+
+            <!-- Modal de Perfil de Diputado -->
+            <div id="deputyProfileModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl max-w-7xl w-full mx-4 max-h-[95vh] overflow-hidden shadow-2xl">
+                    <div id="deputyProfileContent">
+                        <!-- Contenido dinámico del perfil -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Agenda -->
+        <section id="agenda" class="section-content hidden fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-6">Agenda Semanal de Trabajo</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Agenda colaborativa donde cada diputado registra sus actividades y compromisos semanales.
+                </p>
+            </div>
+
+            <!-- Controles de Semana -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">Semana del 18-24 de Noviembre, 2024</h3>
+                    <div class="flex space-x-4">
+                        <button onclick="changeWeek(-1)" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all">
+                            ← Anterior
+                        </button>
+                        <button class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-medium">
+                            Semana Actual
+                        </button>
+                        <button onclick="changeWeek(1)" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all">
+                            Siguiente →
+                        </button>
+                        <button id="addEventBtn" onclick="showAddEventModal()" class="hidden bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all">
+                            + Agregar Evento
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendario Semanal -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="grid grid-cols-7 gap-4" id="weeklyCalendar">
+                    <!-- El calendario se cargará dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Modal para Agregar Evento -->
+            <div id="addEventModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+                    <h3 class="text-2xl font-bold mb-6">Agregar Evento a la Agenda</h3>
+                    <form onsubmit="addAgendaEvent(event)">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">Título del Evento</label>
+                            <input type="text" id="eventTitle" class="w-full p-3 border rounded-lg" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">Fecha</label>
+                            <input type="date" id="eventDate" class="w-full p-3 border rounded-lg" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">Hora</label>
+                            <input type="time" id="eventTime" class="w-full p-3 border rounded-lg" required>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Descripción</label>
+                            <textarea id="eventDescription" class="w-full p-3 border rounded-lg h-24"></textarea>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button type="submit" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-all">
+                                Agregar Evento
+                            </button>
+                            <button type="button" onclick="hideAddEventModal()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition-all">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Actividades -->
+        <section id="actividades" class="section-content hidden fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-6">Actividades del Grupo Parlamentario</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Conoce las iniciativas, propuestas y actividades individuales y colectivas de nuestros diputados.
+                </p>
+            </div>
+
+            <!-- Filtros de Actividades -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <span class="font-medium text-gray-700">Filtrar por:</span>
+                    <button onclick="filterActivities('all')" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-all">
+                        Todas
+                    </button>
+                    <button onclick="filterActivities('individual')" class="filter-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-all">
+                        Individuales
+                    </button>
+                    <button onclick="filterActivities('collective')" class="filter-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-all">
+                        Colectivas
+                    </button>
+                    <button onclick="filterActivities('proposals')" class="filter-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-all">
+                        Propuestas
+                    </button>
+                    <button onclick="filterActivities('communications')" class="filter-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-all">
+                        Comunicados
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista de Actividades -->
+            <div class="space-y-6" id="activitiesList">
+                <!-- Las actividades se cargarán dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Sección Contacto -->
+        <section id="contacto" class="section-content hidden fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-6">Contacto Ciudadano</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Comunícate directamente con cualquier diputado. Tu voz es importante para nosotros.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- Formulario de Contacto -->
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold mb-6">Envía tu Mensaje</h3>
+                    <form onsubmit="submitContactForm(event)">
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Dirigido a:</label>
+                            <select id="contactRecipient" class="w-full p-4 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required>
+                                <option value="">Seleccionar diputado...</option>
+                                <option value="all">Todo el Grupo Parlamentario</option>
+                                <option value="ana.martinez">Dip. Ana Martínez López</option>
+                                <option value="carlos.rodriguez">Dip. Carlos Rodríguez Hernández</option>
+                                <option value="maria.lopez">Dip. María López García</option>
+                                <option value="jorge.garcia">Dip. Jorge García Mendoza</option>
+                                <option value="laura.hernandez">Dip. Laura Hernández Torres</option>
+                                <option value="roberto.sanchez">Dip. Roberto Sánchez Ruiz</option>
+                                <option value="patricia.torres">Dip. Patricia Torres Vázquez</option>
+                                <option value="miguel.vazquez">Dip. Miguel Vázquez Flores</option>
+                                <option value="sofia.flores">Dip. Sofía Flores Morales</option>
+                            </select>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Nombre Completo *</label>
+                                <input type="text" class="w-full p-3 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Correo Electrónico *</label>
+                                <input type="email" class="w-full p-3 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Teléfono</label>
+                                <input type="tel" class="w-full p-3 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Municipio</label>
+                                <select class="w-full p-3 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="tijuana">Tijuana</option>
+                                    <option value="mexicali">Mexicali</option>
+                                    <option value="ensenada">Ensenada</option>
+                                    <option value="tecate">Tecate</option>
+                                    <option value="rosarito">Playas de Rosarito</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">Asunto *</label>
+                            <input type="text" class="w-full p-3 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Mensaje *</label>
+                            <textarea class="w-full p-3 border-2 rounded-lg h-32 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Describe tu mensaje, propuesta o consulta..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-primary text-white py-4 rounded-lg hover:bg-red-800 transition-all font-semibold text-lg">
+                            Enviar Mensaje
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Información de Contacto -->
+                <div class="space-y-8">
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <h3 class="text-2xl font-bold mb-6">Información General</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span class="text-blue-600 text-xl">📍</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg">Dirección</h4>
+                                    <p class="text-gray-600">Congreso del Estado de Baja California<br>Blvd. Zertuche y Blvd. de los Héroes<br>Tijuana, Baja California</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                    <span class="text-green-600 text-xl">📞</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg">Teléfonos</h4>
+                                    <p class="text-gray-600">Conmutador: (664) 123-4567<br>Atención Ciudadana: (664) 123-4568</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <span class="text-purple-600 text-xl">✉️</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg">Correo Electrónico</h4>
+                                    <p class="text-gray-600">contacto@gpmbc.gob.mx<br>atencion.ciudadana@gpmbc.gob.mx</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <h3 class="text-2xl font-bold mb-6">Estadísticas de Atención</h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600 mb-2">156</div>
+                                <p class="text-gray-600">Mensajes este mes</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600 mb-2">18h</div>
+                                <p class="text-gray-600">Tiempo promedio de respuesta</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-purple-600 mb-2">4.8/5</div>
+                                <p class="text-gray-600">Satisfacción ciudadana</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-red-600 mb-2">89%</div>
+                                <p class="text-gray-600">Casos resueltos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Panel Administrativo -->
+        <section id="admin" class="section-content hidden fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-6">Panel de Gestión</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Gestiona tu perfil, agenda, publicaciones y comunicación con los ciudadanos.
+                </p>
+            </div>
+
+            <!-- Dashboard de Estadísticas -->
+            <div class="grid md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📝</span>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-600 mb-2">8</div>
+                    <p class="text-gray-600 font-medium">Propuestas Activas</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📧</span>
+                    </div>
+                    <div class="text-3xl font-bold text-green-600 mb-2">23</div>
+                    <p class="text-gray-600 font-medium">Mensajes Pendientes</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📅</span>
+                    </div>
+                    <div class="text-3xl font-bold text-purple-600 mb-2">12</div>
+                    <p class="text-gray-600 font-medium">Eventos esta Semana</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <div class="text-3xl font-bold text-red-600 mb-2">4.9</div>
+                    <p class="text-gray-600 font-medium">Calificación Ciudadana</p>
+                </div>
+            </div>
+
+            <!-- Panel de Edición de Perfil -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h3 class="text-2xl font-bold mb-6">Mi Perfil Público</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Biografía Personalizada</label>
+                        <textarea id="customBioInput" class="w-full p-3 border-2 rounded-lg h-24 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Agrega información adicional sobre tu trayectoria..."></textarea>
+                        <div class="text-xs text-gray-500 mt-1">Esta información se mostrará en tu perfil público</div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Enlaces Sociales</label>
+                        <div class="space-y-2">
+                            <input type="url" id="twitterLink" class="w-full p-2 border rounded-lg text-sm" placeholder="Twitter/X (https://twitter.com/usuario)">
+                            <input type="url" id="facebookLink" class="w-full p-2 border rounded-lg text-sm" placeholder="Facebook (https://facebook.com/usuario)">
+                            <input type="url" id="linkedinLink" class="w-full p-2 border rounded-lg text-sm" placeholder="LinkedIn (https://linkedin.com/in/usuario)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-medium">Vista Previa del Perfil</h4>
+                            <p class="text-sm text-gray-600">Los cambios se reflejarán automáticamente en tu perfil público</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="saveProfileChanges()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all">
+                                💾 Guardar Cambios
+                            </button>
+                            <button onclick="previewPublicProfile()" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all">
+                                👁️ Ver Perfil Público
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Herramientas de Gestión -->
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Panel de Publicaciones Mejorado -->
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold">Gestión de Contenido</h3>
+                        <div class="flex space-x-2">
+                            <button onclick="showMyPublications()" class="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 transition-all text-sm">
+                                📋 Mis Publicaciones
+                            </button>
+                            <button onclick="showContentLibrary()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all text-sm">
+                                📁 Mi Biblioteca
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Acceso Rápido -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <button onclick="showQuickUpload()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all">
+                            <div class="text-center">
+                                <div class="text-3xl mb-2">⚡</div>
+                                <div class="font-semibold">Subida Rápida</div>
+                                <div class="text-xs opacity-90">Arrastra archivos aquí</div>
+                            </div>
+                        </button>
+                        <button onclick="showContentWizard()" class="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all">
+                            <div class="text-center">
+                                <div class="text-3xl mb-2">🎯</div>
+                                <div class="font-semibold">Asistente</div>
+                                <div class="text-xs opacity-90">Guía paso a paso</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Tipos de Contenido -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="showPublishModal('news')" class="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg hover:bg-blue-100 transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">📰</div>
+                                <div>
+                                    <div class="font-semibold text-blue-800">Noticia</div>
+                                    <div class="text-xs text-blue-600">Noticias y comunicados</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="showPublishModal('proposal')" class="bg-green-50 border-2 border-green-200 p-4 rounded-lg hover:bg-green-100 transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">📋</div>
+                                <div>
+                                    <div class="font-semibold text-green-800">Propuesta</div>
+                                    <div class="text-xs text-green-600">Iniciativas legislativas</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="showPublishModal('video')" class="bg-purple-50 border-2 border-purple-200 p-4 rounded-lg hover:bg-purple-100 transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">🎥</div>
+                                <div>
+                                    <div class="font-semibold text-purple-800">Video</div>
+                                    <div class="text-xs text-purple-600">Videos y multimedia</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="showPublishModal('image')" class="bg-yellow-50 border-2 border-yellow-200 p-4 rounded-lg hover:bg-yellow-100 transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">🖼️</div>
+                                <div>
+                                    <div class="font-semibold text-yellow-800">Imagen</div>
+                                    <div class="text-xs text-yellow-600">Fotos y gráficos</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="showPublishModal('document')" class="bg-red-50 border-2 border-red-200 p-4 rounded-lg hover:bg-red-100 transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">📄</div>
+                                <div>
+                                    <div class="font-semibold text-red-800">Documento</div>
+                                    <div class="text-xs text-red-600">PDFs e informes</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="showPublishModal('event')" class="bg-indigo-50 border-2 border-indigo-200 p-4 rounded-lg hover:bg-indigo-100 transition-all text-left group">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">📅</div>
+                                <div>
+                                    <div class="font-semibold text-indigo-800">Evento</div>
+                                    <div class="text-xs text-indigo-600">Actividades y citas</div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Estadísticas de Contenido -->
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-blue-600">24</div>
+                                <div class="text-xs text-gray-600">Publicaciones</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-green-600">1.2K</div>
+                                <div class="text-xs text-gray-600">Visualizaciones</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-purple-600">89%</div>
+                                <div class="text-xs text-gray-600">Engagement</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel de Mensajes -->
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold mb-6">Mensajes Ciudadanos</h3>
+                    <div class="space-y-4 max-h-96 overflow-y-auto" id="adminMessages">
+                        <!-- Los mensajes se cargarán dinámicamente -->
+                    </div>
+                    <button onclick="showAllMessages()" class="w-full mt-4 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-all">
+                        Ver Todos los Mensajes
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Mejorado para Publicar Contenido -->
+    <div id="publishModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <div id="publishModalIcon" class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-xl">📰</div>
+                        <div>
+                            <h2 id="publishModalTitle" class="text-2xl font-bold">Publicar Contenido</h2>
+                            <p id="publishModalSubtitle" class="text-gray-600 text-sm">Comparte tu contenido con los ciudadanos</p>
+                        </div>
+                    </div>
+                    <button onclick="hidePublishModal()" class="text-gray-500 hover:text-gray-700 text-3xl">×</button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <form onsubmit="submitPublication(event)">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Columna Izquierda - Información Básica -->
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Título *</label>
+                                <input type="text" id="publishTitle" class="w-full p-4 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required placeholder="Ingresa un título atractivo...">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Descripción/Contenido *</label>
+                                <textarea id="publishContent" class="w-full p-4 border-2 rounded-lg h-40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" required placeholder="Describe tu contenido..."></textarea>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    <span id="contentCounter">0</span>/500 caracteres
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Categoría</label>
+                                <select id="publishCategory" class="w-full p-4 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                                    <option value="general">General</option>
+                                    <option value="educacion">Educación</option>
+                                    <option value="salud">Salud</option>
+                                    <option value="economia">Economía</option>
+                                    <option value="seguridad">Seguridad</option>
+                                    <option value="medio-ambiente">Medio Ambiente</option>
+                                    <option value="desarrollo-social">Desarrollo Social</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Etiquetas</label>
+                                <input type="text" id="publishTags" class="w-full p-4 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="educación, salud, desarrollo">
+                                <div class="text-xs text-gray-500 mt-1">Separa las etiquetas con comas</div>
+                            </div>
+                        </div>
+
+                        <!-- Columna Derecha - Archivos y Configuración -->
+                        <div class="space-y-6">
+                            <!-- Zona de Subida de Archivos -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Archivos Multimedia</label>
+                                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                                    <div class="text-4xl mb-4">📁</div>
+                                    <p class="text-gray-600 mb-2">Arrastra archivos aquí o haz clic para seleccionar</p>
+                                    <p class="text-xs text-gray-500">Soporta: JPG, PNG, PDF, MP4, DOC (Max: 50MB)</p>
+                                    <input type="file" id="fileInput" class="hidden" multiple accept="image/*,video/*,.pdf,.doc,.docx">
+                                </div>
+                                <div id="filePreview" class="mt-4 space-y-2"></div>
+                            </div>
+
+                            <!-- URL de Video/Enlace -->
+                            <div id="urlSection" class="hidden">
+                                <label class="block text-sm font-medium mb-2">URL del Video/Enlace</label>
+                                <input type="url" id="publishUrl" class="w-full p-4 border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="https://youtube.com/watch?v=...">
+                                <div class="text-xs text-gray-500 mt-1">YouTube, Vimeo, Facebook, etc.</div>
+                            </div>
+
+                            <!-- Configuración de Publicación -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-medium mb-3">Configuración de Publicación</h4>
+                                
+                                <div class="space-y-3">
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="publishNow" checked class="w-4 h-4 text-blue-600">
+                                        <span class="text-sm">Publicar inmediatamente</span>
+                                    </label>
+                                    
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="allowComments" checked class="w-4 h-4 text-blue-600">
+                                        <span class="text-sm">Permitir comentarios</span>
+                                    </label>
+                                    
+                                    <label class="flex items-center space-x-3">
+                                        <input type="checkbox" id="sendNotification" class="w-4 h-4 text-blue-600">
+                                        <span class="text-sm">Enviar notificación a seguidores</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Programar Publicación -->
+                            <div id="scheduleSection" class="hidden bg-blue-50 p-4 rounded-lg">
+                                <h4 class="font-medium mb-3">Programar Publicación</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Fecha</label>
+                                        <input type="date" id="scheduleDate" class="w-full p-2 border rounded text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">Hora</label>
+                                        <input type="time" id="scheduleTime" class="w-full p-2 border rounded text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista Previa -->
+                    <div class="mt-8 pt-6 border-t border-gray-200">
+                        <h4 class="font-medium mb-4">Vista Previa</h4>
+                        <div id="contentPreview" class="bg-gray-50 p-6 rounded-lg border">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                    ${currentUser ? deputies.find(d => d.id === currentUser)?.name.split(' ')[0][0] + deputies.find(d => d.id === currentUser)?.name.split(' ')[1][0] : 'DP'}
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="font-semibold" id="previewAuthor">Nombre del Diputado</span>
+                                        <span class="text-blue-600 text-sm">✓ Verificado</span>
+                                        <span class="text-gray-500 text-sm">• Ahora</span>
+                                    </div>
+                                    <div id="previewTitle" class="font-bold text-lg mb-2 text-gray-400">El título aparecerá aquí...</div>
+                                    <div id="previewContent" class="text-gray-600 mb-3 text-gray-400">El contenido aparecerá aquí...</div>
+                                    <div id="previewTags" class="flex flex-wrap gap-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                        <button type="button" onclick="saveDraft()" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-all">
+                            💾 Guardar Borrador
+                        </button>
+                        <div class="flex space-x-4">
+                            <button type="button" onclick="hidePublishModal()" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-all font-semibold">
+                                🚀 Publicar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Subida Rápida -->
+    <div id="quickUploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">⚡</span>
+                </div>
+                <h2 class="text-2xl font-bold">Subida Rápida</h2>
+                <p class="text-gray-600">Sube archivos de forma rápida y sencilla</p>
+            </div>
+            
+            <div id="quickDropZone" class="border-2 border-dashed border-blue-300 rounded-lg p-12 text-center hover:border-blue-400 transition-colors cursor-pointer bg-blue-50">
+                <div class="text-6xl mb-4">📁</div>
+                <p class="text-lg font-medium mb-2">Arrastra archivos aquí</p>
+                <p class="text-sm text-gray-600 mb-4">o haz clic para seleccionar</p>
+                <input type="file" id="quickFileInput" class="hidden" multiple>
+                <button type="button" onclick="document.getElementById('quickFileInput').click()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all">
+                    Seleccionar Archivos
+                </button>
+            </div>
+            
+            <div id="quickFileList" class="mt-6 space-y-2 max-h-40 overflow-y-auto"></div>
+            
+            <div class="flex space-x-4 mt-6">
+                <button onclick="hideQuickUpload()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition-all">
+                    Cancelar
+                </button>
+                <button onclick="processQuickUpload()" class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all">
+                    Subir Archivos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Biblioteca de Contenido -->
+    <div id="contentLibraryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Mi Biblioteca de Contenido</h2>
+                    <button onclick="hideContentLibrary()" class="text-gray-500 hover:text-gray-700 text-3xl">×</button>
+                </div>
+                <div class="flex space-x-4 mt-4">
+                    <button onclick="filterLibrary('all')" class="library-filter bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">Todos</button>
+                    <button onclick="filterLibrary('images')" class="library-filter bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Imágenes</button>
+                    <button onclick="filterLibrary('videos')" class="library-filter bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Videos</button>
+                    <button onclick="filterLibrary('documents')" class="library-filter bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Documentos</button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div id="libraryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Contenido de la biblioteca se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="gradient-primary text-white mt-20">
+        <div class="container mx-auto px-6 py-16">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                            <span class="text-primary font-bold text-xl">BC</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">GPMBC</h3>
+                            <p class="text-red-200 text-sm">Grupo Parlamentario</p>
+                        </div>
+                    </div>
+                    <p class="text-red-100 leading-relaxed">
+                        Trabajando con transparencia, dedicación y cercanía ciudadana por el desarrollo de Baja California.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Enlaces Rápidos</h4>
+                    <ul class="space-y-3 text-red-100">
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Transparencia</a></li>
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Leyes Aprobadas</a></li>
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Presupuesto Público</a></li>
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Informes Legislativos</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Áreas de Trabajo</h4>
+                    <ul class="space-y-3 text-red-100">
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Educación y Cultura</a></li>
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Salud Pública</a></li>
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Desarrollo Económico</a></li>
+                        <li><a href="#" class="hover:text-yellow-200 transition-colors">Medio Ambiente</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Contacto</h4>
+                    <ul class="space-y-3 text-red-100">
+                        <li class="flex items-center space-x-2">
+                            <span>📍</span>
+                            <span>Congreso del Estado BC</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <span>📞</span>
+                            <span>(664) 123-4567</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <span>✉️</span>
+                            <span>contacto@gpmbc.gob.mx</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-red-400 mt-12 pt-8 text-center">
+                <p class="text-red-200">© 2024 Grupo Parlamentario de Baja California. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Estado global de la aplicación
+        let currentUser = null;
+        let currentSection = 'inicio';
+        let currentWeek = 0;
+
+        // Sistema de datos dinámicos de diputados
+        let deputiesData = {
+            'ana.martinez': {
+                id: 'ana.martinez',
+                name: 'Ana Martínez López',
+                position: 'Presidenta Comisión de Educación',
+                specialization: 'Educación y Cultura',
+                email: 'ana.martinez@gpmbc.gob.mx',
+                phone: '(664) 123-4501',
+                color: 'blue',
+                bio: 'Licenciada en Pedagogía con Maestría en Políticas Educativas. 12 años de experiencia en el sector educativo.',
+                initiatives: 8,
+                messages: 45,
+                rating: 4.8,
+                publications: [
+                    {
+                        id: 1,
+                        type: 'news',
+                        title: 'Propuesta de Reforma Educativa Digital',
+                        content: 'Iniciativa para modernizar el sistema educativo con tecnología...',
+                        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        category: 'educacion',
+                        tags: ['educación', 'tecnología', 'modernización'],
+                        files: [],
+                        views: 245,
+                        likes: 18
+                    }
+                ],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'carlos.rodriguez': {
+                id: 'carlos.rodriguez',
+                name: 'Carlos Rodríguez Hernández',
+                position: 'Coordinador del Grupo',
+                specialization: 'Desarrollo Económico',
+                email: 'carlos.rodriguez@gpmbc.gob.mx',
+                phone: '(664) 123-4502',
+                color: 'green',
+                bio: 'Economista con especialización en Desarrollo Regional. Coordinador del grupo parlamentario.',
+                initiatives: 12,
+                messages: 67,
+                rating: 4.9,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'maria.lopez': {
+                id: 'maria.lopez',
+                name: 'María López García',
+                position: 'Secretaria Comisión de Salud',
+                specialization: 'Salud Pública',
+                email: 'maria.lopez@gpmbc.gob.mx',
+                phone: '(664) 123-4503',
+                color: 'purple',
+                bio: 'Médica especialista en Salud Pública con enfoque en políticas sanitarias estatales.',
+                initiatives: 6,
+                messages: 38,
+                rating: 4.7,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'jorge.garcia': {
+                id: 'jorge.garcia',
+                name: 'Jorge García Mendoza',
+                position: 'Presidente Comisión de Hacienda',
+                specialization: 'Finanzas Públicas',
+                email: 'jorge.garcia@gpmbc.gob.mx',
+                phone: '(664) 123-4504',
+                color: 'red',
+                bio: 'Contador Público con especialización en Finanzas Públicas y Presupuesto Gubernamental.',
+                initiatives: 9,
+                messages: 52,
+                rating: 4.6,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'laura.hernandez': {
+                id: 'laura.hernandez',
+                name: 'Laura Hernández Torres',
+                position: 'Comisión de Desarrollo Social',
+                specialization: 'Desarrollo Social',
+                email: 'laura.hernandez@gpmbc.gob.mx',
+                phone: '(664) 123-4505',
+                color: 'indigo',
+                bio: 'Trabajadora Social con enfoque en programas de bienestar y desarrollo comunitario.',
+                initiatives: 7,
+                messages: 41,
+                rating: 4.8,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'roberto.sanchez': {
+                id: 'roberto.sanchez',
+                name: 'Roberto Sánchez Ruiz',
+                position: 'Presidente Comisión de Seguridad',
+                specialization: 'Seguridad Pública',
+                email: 'roberto.sanchez@gpmbc.gob.mx',
+                phone: '(664) 123-4506',
+                color: 'yellow',
+                bio: 'Criminólogo especializado en seguridad pública y prevención del delito.',
+                initiatives: 11,
+                messages: 59,
+                rating: 4.7,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'patricia.torres': {
+                id: 'patricia.torres',
+                name: 'Patricia Torres Vázquez',
+                position: 'Presidenta Comisión Medio Ambiente',
+                specialization: 'Medio Ambiente',
+                email: 'patricia.torres@gpmbc.gob.mx',
+                phone: '(664) 123-4507',
+                color: 'pink',
+                bio: 'Bióloga especializada en gestión ambiental y políticas de sustentabilidad.',
+                initiatives: 10,
+                messages: 43,
+                rating: 4.9,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'miguel.vazquez': {
+                id: 'miguel.vazquez',
+                name: 'Miguel Vázquez Flores',
+                position: 'Comisión de Turismo',
+                specialization: 'Turismo y Desarrollo',
+                email: 'miguel.vazquez@gpmbc.gob.mx',
+                phone: '(664) 123-4508',
+                color: 'teal',
+                bio: 'Especialista en desarrollo turístico y promoción económica regional.',
+                initiatives: 5,
+                messages: 29,
+                rating: 4.5,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            },
+            'sofia.flores': {
+                id: 'sofia.flores',
+                name: 'Sofía Flores Morales',
+                position: 'Secretaria Comisión Derechos Humanos',
+                specialization: 'Derechos Humanos',
+                email: 'sofia.flores@gpmbc.gob.mx',
+                phone: '(664) 123-4509',
+                color: 'orange',
+                bio: 'Abogada especialista en derechos humanos y equidad de género.',
+                initiatives: 8,
+                messages: 47,
+                rating: 4.8,
+                publications: [],
+                profileImage: null,
+                customBio: null,
+                socialLinks: {},
+                achievements: []
+            }
+        };
+
+        // Array de diputados para compatibilidad
+        const deputies = Object.values(deputiesData);
+
+        // Datos de actividades
+        const activities = [
+            {
+                id: 1,
+                type: 'collective',
+                category: 'proposals',
+                title: 'Ley de Desarrollo Sustentable Aprobada',
+                description: 'Iniciativa conjunta del grupo parlamentario para promover el desarrollo sustentable en Baja California.',
+                author: 'Grupo Parlamentario',
+                date: '2024-11-15',
+                status: 'approved',
+                tags: ['medio ambiente', 'desarrollo', 'sustentabilidad']
+            },
+            {
+                id: 2,
+                type: 'individual',
+                category: 'communications',
+                title: 'Comunicado sobre Presupuesto Educativo 2025',
+                description: 'Análisis y propuestas para la asignación presupuestal del sector educativo.',
+                author: 'Dip. Ana Martínez',
+                date: '2024-11-12',
+                status: 'published',
+                tags: ['educación', 'presupuesto', 'análisis']
+            },
+            {
+                id: 3,
+                type: 'collective',
+                category: 'proposals',
+                title: 'Mesa de Trabajo - Reforma al Sistema de Salud',
+                description: 'Reunión con especialistas para analizar propuestas de mejora al sistema de salud estatal.',
+                author: 'Comisión de Salud',
+                date: '2024-11-10',
+                status: 'in_progress',
+                tags: ['salud', 'reforma', 'especialistas']
+            }
+        ];
+
+        // Datos de agenda semanal
+        const weeklyAgenda = {
+            0: { // Semana actual
+                'monday': [
+                    { time: '09:00', title: 'Sesión Plenaria', location: 'Congreso del Estado', type: 'collective' },
+                    { time: '14:00', title: 'Comisión de Hacienda', location: 'Sala de Comisiones', type: 'individual', deputy: 'jorge.garcia' }
+                ],
+                'tuesday': [
+                    { time: '10:00', title: 'Foro Ciudadano', location: 'Centro de Convenciones', type: 'collective' }
+                ],
+                'wednesday': [
+                    { time: '11:00', title: 'Reunión de Coordinación', location: 'Oficina del Coordinador', type: 'collective' }
+                ],
+                'thursday': [
+                    { time: '09:30', title: 'Comisión de Educación', location: 'Sala de Comisiones', type: 'individual', deputy: 'ana.martinez' }
+                ],
+                'friday': [
+                    { time: '10:00', title: 'Sesión Extraordinaria', location: 'Congreso del Estado', type: 'collective' }
+                ]
+            }
+        };
+
+        // Sistema de autenticación
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function login(event) {
+            event.preventDefault();
+            const user = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (password === 'gpmbc2024') {
+                currentUser = user;
+                
+                // Actualizar UI
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('adminNavBtn').classList.remove('hidden');
+                document.getElementById('addEventBtn').classList.remove('hidden');
+                
+                const deputy = deputiesData[user];
+                document.getElementById('userName').textContent = deputy ? deputy.name : 'Usuario';
+                
+                hideLoginModal();
+                showNotification('Sesión iniciada correctamente', 'success');
+                showSection('admin');
+                
+                // Cargar datos del perfil en los campos de edición
+                setTimeout(() => {
+                    loadProfileData();
+                }, 100);
+            } else {
+                showNotification('Contraseña incorrecta. Use: gpmbc2024', 'error');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            
+            // Actualizar UI
+            document.getElementById('loginBtn').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+            document.getElementById('userInfo').classList.add('hidden');
+            document.getElementById('adminNavBtn').classList.add('hidden');
+            document.getElementById('addEventBtn').classList.add('hidden');
+            
+            showNotification('Sesión cerrada correctamente', 'success');
+            showSection('inicio');
+        }
+
+        // Sistema de navegación
+        function showSection(sectionId) {
+            if (sectionId === 'admin' && !currentUser) {
+                showNotification('Debe iniciar sesión para acceder al panel de gestión', 'error');
+                showLoginModal();
+                return;
+            }
+
+            // Ocultar todas las secciones
+            const sections = document.querySelectorAll('.section-content');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+                section.classList.remove('fade-in');
+            });
+            
+            // Mostrar sección seleccionada
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                setTimeout(() => {
+                    targetSection.classList.add('fade-in');
+                }, 10);
+            }
+
+            // Actualizar navegación activa
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.classList.remove('nav-active');
+            });
+
+            currentSection = sectionId;
+
+            // Cargar contenido específico de la sección
+            if (sectionId === 'diputados') {
+                loadDeputies();
+            } else if (sectionId === 'agenda') {
+                loadWeeklyAgenda();
+            } else if (sectionId === 'actividades') {
+                loadActivities();
+            } else if (sectionId === 'admin') {
+                loadAdminMessages();
+            }
+        }
+
+        // Sistema de notificaciones
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            
+            notification.className = 'notification';
+            if (type === 'success') {
+                notification.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                notification.classList.add('bg-red-500');
+            } else {
+                notification.classList.add('bg-blue-500');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        // Cargar diputados
+        function loadDeputies() {
+            const grid = document.getElementById('deputiesGrid');
+            grid.innerHTML = '';
+
+            deputies.forEach(deputy => {
+                const deputyCard = document.createElement('div');
+                deputyCard.className = 'bg-white rounded-xl shadow-lg overflow-hidden card-hover';
+                deputyCard.innerHTML = `
+                    <div class="h-32 bg-gradient-to-br from-${deputy.color}-400 to-${deputy.color}-600 flex items-center justify-center relative">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                            <span class="text-xl font-bold text-${deputy.color}-600">${deputy.name.split(' ')[0][0]}${deputy.name.split(' ')[1][0]}</span>
+                        </div>
+                        <div class="absolute top-2 right-2 bg-white bg-opacity-20 px-2 py-1 rounded text-xs text-white">
+                            ${deputy.specialization}
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-1">${deputy.name}</h3>
+                        <p class="text-${deputy.color}-600 text-sm mb-3">${deputy.position}</p>
+                        <p class="text-gray-600 text-sm mb-4">${deputy.bio}</p>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-green-600">${deputy.initiatives}</div>
+                                <div class="text-xs text-gray-500">Iniciativas</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-blue-600">${deputy.messages}</div>
+                                <div class="text-xs text-gray-500">Mensajes</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-purple-600">${deputy.rating}</div>
+                                <div class="text-xs text-gray-500">Calificación</div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <button onclick="showDeputyProfile('${deputy.id}')" class="w-full bg-${deputy.color}-600 text-white py-2 rounded-lg hover:bg-${deputy.color}-700 transition-all">
+                                Ver Perfil Completo
+                            </button>
+                            <button onclick="contactDeputy('${deputy.id}')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-all">
+                                Enviar Mensaje
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(deputyCard);
+            });
+        }
+
+        // Mostrar perfil de diputado con datos actualizados
+        function showDeputyProfile(deputyId) {
+            const deputy = deputiesData[deputyId];
+            if (!deputy) return;
+
+            const modal = document.getElementById('deputyProfileModal');
+            const content = document.getElementById('deputyProfileContent');
+            
+            // Obtener biografía personalizada o usar la por defecto
+            const displayBio = deputy.customBio || deputy.bio;
+            
+            // Obtener todas las publicaciones del diputado ordenadas por fecha
+            const allPublications = deputy.publications.slice().reverse();
+            
+            // Enlaces sociales
+            const socialLinks = deputy.socialLinks || {};
+            
+            // Obtener archivos subidos por el diputado
+            const uploadedFiles = deputy.uploadedFiles || [];
+            
+            // Calcular estadísticas dinámicas
+            const totalViews = deputy.publications.reduce((sum, pub) => sum + (pub.views || 0), 0);
+            const totalLikes = deputy.publications.reduce((sum, pub) => sum + (pub.likes || 0), 0);
+            const avgRating = deputy.rating || 4.5;
+            
+            content.innerHTML = `
+                <div class="relative">
+                    <!-- Header del Perfil -->
+                    <div class="bg-gradient-to-r from-${deputy.color}-600 via-${deputy.color}-500 to-${deputy.color}-400 text-white p-8 rounded-t-xl">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="flex items-center space-x-6">
+                                <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center border-4 border-white border-opacity-30">
+                                    <span class="text-3xl font-bold text-white">${deputy.name.split(' ')[0][0]}${deputy.name.split(' ')[1][0]}</span>
+                                </div>
+                                <div>
+                                    <h2 class="text-4xl font-bold mb-2">${deputy.name}</h2>
+                                    <p class="text-xl text-white text-opacity-90 mb-2">${deputy.position}</p>
+                                    <p class="text-lg text-white text-opacity-80">${deputy.specialization}</p>
+                                    ${deputy.customBio ? '<div class="text-sm text-white text-opacity-70 mt-2">✨ Perfil actualizado recientemente</div>' : ''}
+                                </div>
+                            </div>
+                            <button onclick="hideDeputyProfile()" class="text-white hover:text-gray-200 text-4xl font-light">×</button>
+                        </div>
+                        
+                        <!-- Estadísticas Principales -->
+                        <div class="grid grid-cols-4 gap-6 mt-8">
+                            <div class="text-center bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="text-3xl font-bold">${deputy.publications.length}</div>
+                                <div class="text-sm text-white text-opacity-80">Publicaciones</div>
+                            </div>
+                            <div class="text-center bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="text-3xl font-bold">${totalViews.toLocaleString()}</div>
+                                <div class="text-sm text-white text-opacity-80">Visualizaciones</div>
+                            </div>
+                            <div class="text-center bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="text-3xl font-bold">${deputy.messages}</div>
+                                <div class="text-sm text-white text-opacity-80">Mensajes Atendidos</div>
+                            </div>
+                            <div class="text-center bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="text-3xl font-bold">${avgRating}/5</div>
+                                <div class="text-sm text-white text-opacity-80">Calificación</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenido Principal -->
+                    <div class="p-8 max-h-[70vh] overflow-y-auto">
+                        <div class="grid lg:grid-cols-3 gap-8">
+                            <!-- Columna Izquierda - Información Personal -->
+                            <div class="lg:col-span-1 space-y-6">
+                                <!-- Información de Contacto -->
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <h3 class="text-xl font-bold mb-4 text-gray-800">Información de Contacto</h3>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <span class="text-blue-600">📧</span>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm text-gray-500">Email</div>
+                                                <div class="text-blue-600 font-medium">${deputy.email}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                                <span class="text-green-600">📞</span>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm text-gray-500">Teléfono</div>
+                                                <div class="text-green-600 font-medium">${deputy.phone}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                                <span class="text-purple-600">🏛️</span>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm text-gray-500">Oficina</div>
+                                                <div class="text-purple-600 font-medium">Congreso del Estado</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Enlaces Sociales -->
+                                ${Object.keys(socialLinks).length > 0 ? `
+                                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6">
+                                        <h3 class="text-xl font-bold mb-4 text-gray-800">Redes Sociales</h3>
+                                        <div class="space-y-3">
+                                            ${socialLinks.twitter ? `
+                                                <a href="${socialLinks.twitter}" target="_blank" class="flex items-center space-x-3 p-3 bg-white rounded-lg hover:shadow-md transition-all">
+                                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span class="text-blue-500 text-lg">🐦</span>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium text-gray-800">Twitter/X</div>
+                                                        <div class="text-sm text-gray-500">Sígueme en Twitter</div>
+                                                    </div>
+                                                </a>
+                                            ` : ''}
+                                            ${socialLinks.facebook ? `
+                                                <a href="${socialLinks.facebook}" target="_blank" class="flex items-center space-x-3 p-3 bg-white rounded-lg hover:shadow-md transition-all">
+                                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span class="text-blue-600 text-lg">📘</span>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium text-gray-800">Facebook</div>
+                                                        <div class="text-sm text-gray-500">Página oficial</div>
+                                                    </div>
+                                                </a>
+                                            ` : ''}
+                                            ${socialLinks.linkedin ? `
+                                                <a href="${socialLinks.linkedin}" target="_blank" class="flex items-center space-x-3 p-3 bg-white rounded-lg hover:shadow-md transition-all">
+                                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span class="text-blue-700 text-lg">💼</span>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium text-gray-800">LinkedIn</div>
+                                                        <div class="text-sm text-gray-500">Perfil profesional</div>
+                                                    </div>
+                                                </a>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                <!-- Archivos y Documentos -->
+                                ${uploadedFiles.length > 0 ? `
+                                    <div class="bg-yellow-50 rounded-xl p-6">
+                                        <h3 class="text-xl font-bold mb-4 text-gray-800">Documentos Públicos</h3>
+                                        <div class="space-y-3">
+                                            ${uploadedFiles.slice(0, 5).map(file => `
+                                                <div class="flex items-center space-x-3 p-3 bg-white rounded-lg">
+                                                    <div class="text-2xl">${getFileIcon(file.type)}</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-medium text-sm text-gray-800">${file.name}</div>
+                                                        <div class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                                                    </div>
+                                                    <button onclick="downloadFile('${file.name}')" class="text-blue-600 hover:text-blue-800 text-sm">📥</button>
+                                                </div>
+                                            `).join('')}
+                                            ${uploadedFiles.length > 5 ? `
+                                                <div class="text-center">
+                                                    <button onclick="showAllFiles('${deputy.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                        Ver todos los archivos (${uploadedFiles.length})
+                                                    </button>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- Columna Derecha - Contenido Principal -->
+                            <div class="lg:col-span-2 space-y-8">
+                                <!-- Biografía -->
+                                <div class="bg-white border border-gray-200 rounded-xl p-6">
+                                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Biografía Profesional</h3>
+                                    <div class="prose prose-gray max-w-none">
+                                        <p class="text-gray-700 leading-relaxed text-lg">${displayBio}</p>
+                                        ${deputy.customBio ? `
+                                            <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                                                <div class="flex items-center space-x-2 text-blue-700">
+                                                    <span class="text-lg">✨</span>
+                                                    <span class="font-medium">Información actualizada por el diputado</span>
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                
+                                <!-- Publicaciones y Actividades -->
+                                <div class="bg-white border border-gray-200 rounded-xl p-6">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h3 class="text-2xl font-bold text-gray-800">Actividad Reciente</h3>
+                                        <div class="flex space-x-2">
+                                            <button onclick="filterPublications('all', '${deputy.id}')" class="pub-filter-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">Todas</button>
+                                            <button onclick="filterPublications('news', '${deputy.id}')" class="pub-filter-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Noticias</button>
+                                            <button onclick="filterPublications('proposal', '${deputy.id}')" class="pub-filter-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Propuestas</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="publicationsList-${deputy.id}" class="space-y-4">
+                                        ${allPublications.length > 0 ? allPublications.map(pub => `
+                                            <div class="publication-item border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all" data-type="${pub.type}">
+                                                <div class="flex items-start justify-between mb-4">
+                                                    <div class="flex items-center space-x-3">
+                                                        <div class="w-12 h-12 bg-${deputy.color}-100 rounded-full flex items-center justify-center">
+                                                            <span class="text-${deputy.color}-600 text-lg">${getPublicationIcon(pub.type)}</span>
+                                                        </div>
+                                                        <div>
+                                                            <h4 class="text-lg font-bold text-gray-800">${pub.title}</h4>
+                                                            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                                <span class="bg-${deputy.color}-100 text-${deputy.color}-800 px-2 py-1 rounded-full text-xs font-medium">${getPublicationType(pub.type)}</span>
+                                                                <span>${formatDate(pub.date)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                            <span class="flex items-center space-x-1">
+                                                                <span>👁️</span>
+                                                                <span>${pub.views || 0}</span>
+                                                            </span>
+                                                            <span class="flex items-center space-x-1">
+                                                                <span>👍</span>
+                                                                <span>${pub.likes || 0}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <p class="text-gray-700 mb-4 leading-relaxed">${pub.content}</p>
+                                                
+                                                ${pub.tags.length > 0 ? `
+                                                    <div class="flex flex-wrap gap-2 mb-4">
+                                                        ${pub.tags.map(tag => `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">#${tag}</span>`).join('')}
+                                                    </div>
+                                                ` : ''}
+                                                
+                                                ${pub.files && pub.files.length > 0 ? `
+                                                    <div class="border-t border-gray-100 pt-4">
+                                                        <div class="text-sm text-gray-600 mb-2">📎 Archivos adjuntos:</div>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            ${pub.files.map(file => `
+                                                                <div class="flex items-center space-x-2 bg-gray-50 px-3 py-2 rounded-lg">
+                                                                    <span class="text-lg">${getFileIcon(file.type)}</span>
+                                                                    <span class="text-sm font-medium">${file.name}</span>
+                                                                    <button onclick="downloadFile('${file.name}')" class="text-blue-600 hover:text-blue-800 text-xs">📥</button>
+                                                                </div>
+                                                            `).join('')}
+                                                        </div>
+                                                    </div>
+                                                ` : ''}
+                                                
+                                                ${pub.url ? `
+                                                    <div class="border-t border-gray-100 pt-4">
+                                                        <a href="${pub.url}" target="_blank" class="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800">
+                                                            <span>🔗</span>
+                                                            <span class="font-medium">Ver enlace externo</span>
+                                                        </a>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `).join('') : `
+                                            <div class="text-center py-12">
+                                                <div class="text-6xl mb-4">📝</div>
+                                                <h4 class="text-xl font-medium text-gray-600 mb-2">Aún no hay publicaciones</h4>
+                                                <p class="text-gray-500">Este diputado aún no ha compartido contenido público.</p>
+                                            </div>
+                                        `}
+                                    </div>
+                                    
+                                    ${allPublications.length > 3 ? `
+                                        <div class="text-center mt-6">
+                                            <button onclick="loadMorePublications('${deputy.id}')" class="bg-${deputy.color}-600 text-white px-6 py-3 rounded-lg hover:bg-${deputy.color}-700 transition-all">
+                                                Ver más publicaciones
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de Acción -->
+                        <div class="flex flex-wrap gap-4 mt-8 pt-6 border-t border-gray-200">
+                            <button onclick="contactDeputy('${deputy.id}')" class="bg-${deputy.color}-600 text-white px-8 py-3 rounded-lg hover:bg-${deputy.color}-700 transition-all font-semibold flex items-center space-x-2">
+                                <span>📧</span>
+                                <span>Enviar Mensaje</span>
+                            </button>
+                            <button onclick="followDeputy('${deputy.id}')" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-all font-semibold flex items-center space-x-2">
+                                <span>🔔</span>
+                                <span>Seguir Actividades</span>
+                            </button>
+                            <button onclick="shareProfile('${deputy.id}')" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-all font-semibold flex items-center space-x-2">
+                                <span>📤</span>
+                                <span>Compartir Perfil</span>
+                            </button>
+                            <button onclick="subscribeToUpdates('${deputy.id}')" class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition-all font-semibold flex items-center space-x-2">
+                                <span>📬</span>
+                                <span>Suscribirse a Actualizaciones</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function hideDeputyProfile() {
+            document.getElementById('deputyProfileModal').classList.add('hidden');
+        }
+
+        function contactDeputy(deputyId) {
+            hideDeputyProfile();
+            showSection('contacto');
+            
+            // Pre-seleccionar el diputado en el formulario
+            setTimeout(() => {
+                const select = document.getElementById('contactRecipient');
+                if (select) {
+                    select.value = deputyId;
+                }
+            }, 100);
+        }
+
+        function followDeputy(deputyId) {
+            const deputy = deputies.find(d => d.id === deputyId);
+            showNotification(`Ahora sigues las actividades de ${deputy.name}`, 'success');
+        }
+
+        // Cargar agenda semanal
+        function loadWeeklyAgenda() {
+            const calendar = document.getElementById('weeklyCalendar');
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayNames = ['Lunes 18', 'Martes 19', 'Miércoles 20', 'Jueves 21', 'Viernes 22', 'Sábado 23', 'Domingo 24'];
+            
+            calendar.innerHTML = '';
+            
+            days.forEach((day, index) => {
+                const dayColumn = document.createElement('div');
+                dayColumn.className = 'bg-gray-50 rounded-lg p-4';
+                
+                const events = weeklyAgenda[currentWeek] && weeklyAgenda[currentWeek][day] ? weeklyAgenda[currentWeek][day] : [];
+                
+                dayColumn.innerHTML = `
+                    <h4 class="font-bold text-center mb-4 text-gray-700">${dayNames[index]}</h4>
+                    <div class="space-y-3">
+                        ${events.length > 0 ? events.map(event => `
+                            <div class="agenda-item p-3 rounded-lg">
+                                <div class="text-xs font-semibold text-blue-800">${event.time}</div>
+                                <div class="text-sm font-medium">${event.title}</div>
+                                <div class="text-xs text-blue-600">${event.location}</div>
+                                ${event.deputy ? `<div class="text-xs text-gray-500 mt-1">${deputies.find(d => d.id === event.deputy)?.name || ''}</div>` : ''}
+                            </div>
+                        `).join('') : '<div class="text-center text-gray-400 text-sm py-8">Sin actividades</div>'}
+                    </div>
+                `;
+                
+                calendar.appendChild(dayColumn);
+            });
+        }
+
+        function changeWeek(direction) {
+            currentWeek += direction;
+            loadWeeklyAgenda();
+            showNotification(`Mostrando ${direction > 0 ? 'siguiente' : 'anterior'} semana`, 'info');
+        }
+
+        // Gestión de eventos de agenda
+        function showAddEventModal() {
+            document.getElementById('addEventModal').classList.remove('hidden');
+        }
+
+        function hideAddEventModal() {
+            document.getElementById('addEventModal').classList.add('hidden');
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDate').value = '';
+            document.getElementById('eventTime').value = '';
+            document.getElementById('eventDescription').value = '';
+        }
+
+        function addAgendaEvent(event) {
+            event.preventDefault();
+            const title = document.getElementById('eventTitle').value;
+            const date = document.getElementById('eventDate').value;
+            const time = document.getElementById('eventTime').value;
+            
+            // Aquí se agregaría el evento a la agenda
+            showNotification(`Evento "${title}" agregado a la agenda`, 'success');
+            hideAddEventModal();
+            loadWeeklyAgenda();
+        }
+
+        // Cargar actividades
+        function loadActivities() {
+            const list = document.getElementById('activitiesList');
+            list.innerHTML = '';
+
+            activities.forEach(activity => {
+                const activityCard = document.createElement('div');
+                activityCard.className = `activity-item bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500`;
+                activityCard.dataset.category = activity.category;
+                activityCard.dataset.type = activity.type;
+                
+                const statusColors = {
+                    approved: 'green',
+                    published: 'blue',
+                    in_progress: 'yellow'
+                };
+                
+                const statusTexts = {
+                    approved: 'Aprobada',
+                    published: 'Publicado',
+                    in_progress: 'En Proceso'
+                };
+                
+                activityCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">${activity.title}</h3>
+                            <p class="text-gray-600 mb-3">${activity.description}</p>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <span class="bg-${activity.type === 'collective' ? 'blue' : 'green'}-100 text-${activity.type === 'collective' ? 'blue' : 'green'}-800 px-3 py-1 rounded-full text-sm">
+                                    ${activity.type === 'collective' ? 'Colectiva' : 'Individual'}
+                                </span>
+                                <span class="bg-${statusColors[activity.status]}-100 text-${statusColors[activity.status]}-800 px-3 py-1 rounded-full text-sm">
+                                    ${statusTexts[activity.status]}
+                                </span>
+                                ${activity.tags.map(tag => `
+                                    <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">${tag}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="text-right ml-4">
+                            <div class="text-sm text-gray-500">${new Date(activity.date).toLocaleDateString('es-ES')}</div>
+                            <div class="text-xs text-blue-600">${activity.author}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                            <span>👍 ${Math.floor(Math.random() * 50) + 50}% Aprobación</span>
+                            <span>💬 ${Math.floor(Math.random() * 30) + 10} Comentarios</span>
+                        </div>
+                        <button onclick="showActivityDetail(${activity.id})" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">
+                            Ver Detalles
+                        </button>
+                    </div>
+                `;
+                
+                list.appendChild(activityCard);
+            });
+        }
+
+        function filterActivities(category) {
+            const activities = document.querySelectorAll('.activity-item');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            
+            // Actualizar botones
+            filterBtns.forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            
+            event.target.classList.remove('bg-gray-100', 'text-gray-700');
+            event.target.classList.add('bg-blue-500', 'text-white');
+            
+            // Filtrar actividades
+            activities.forEach(activity => {
+                const matchesCategory = category === 'all' || activity.dataset.category === category || activity.dataset.type === category;
+                activity.style.display = matchesCategory ? 'block' : 'none';
+            });
+        }
+
+        function showActivityDetail(activityId) {
+            showNotification('Mostrando detalles de la actividad', 'info');
+        }
+
+        // Formulario de contacto
+        function submitContactForm(event) {
+            event.preventDefault();
+            const recipient = document.getElementById('contactRecipient').value;
+            const deputy = deputies.find(d => d.id === recipient);
+            const recipientName = deputy ? deputy.name : 'el Grupo Parlamentario';
+            
+            showNotification(`¡Mensaje enviado a ${recipientName}! Recibirás respuesta en 24 horas.`, 'success');
+            event.target.reset();
+        }
+
+        // Panel administrativo
+        function loadAdminMessages() {
+            const container = document.getElementById('adminMessages');
+            const messages = [
+                {
+                    id: 1,
+                    subject: 'Propuesta sobre Educación Digital',
+                    sender: 'María González',
+                    preview: 'Sugiero implementar tablets en escuelas primarias...',
+                    time: 'Hace 2 horas',
+                    type: 'proposal'
+                },
+                {
+                    id: 2,
+                    subject: 'Consulta sobre Presupuesto',
+                    sender: 'Carlos Mendoza',
+                    preview: 'Pregunta sobre asignación presupuestal para salud...',
+                    time: 'Hace 5 horas',
+                    type: 'question'
+                },
+                {
+                    id: 3,
+                    subject: 'Felicitación por Ley Aprobada',
+                    sender: 'Ana Rodríguez',
+                    preview: 'Felicita por la aprobación de la ley ambiental...',
+                    time: 'Ayer',
+                    type: 'congratulation'
+                }
+            ];
+
+            container.innerHTML = messages.map(msg => `
+                <div class="border-l-4 border-${msg.type === 'proposal' ? 'blue' : msg.type === 'question' ? 'green' : 'purple'}-500 pl-4 py-3 bg-${msg.type === 'proposal' ? 'blue' : msg.type === 'question' ? 'green' : 'purple'}-50 rounded-r-lg">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-sm">${msg.subject}</h4>
+                        <span class="text-xs text-gray-500">${msg.time}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">${msg.preview}</p>
+                    <div class="text-xs text-gray-500 mb-2">De: ${msg.sender}</div>
+                    <div class="flex space-x-2">
+                        <button onclick="replyMessage(${msg.id})" class="bg-${msg.type === 'proposal' ? 'blue' : msg.type === 'question' ? 'green' : 'purple'}-600 text-white px-3 py-1 rounded text-xs hover:bg-${msg.type === 'proposal' ? 'blue' : msg.type === 'question' ? 'green' : 'purple'}-700">
+                            Responder
+                        </button>
+                        <button class="bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600">
+                            Marcar como leído
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function replyMessage(messageId) {
+            const reply = prompt('Escribe tu respuesta:');
+            if (reply && reply.trim()) {
+                showNotification('Respuesta enviada al ciudadano', 'success');
+            }
+        }
+
+        function showAllMessages() {
+            showNotification('Mostrando todos los mensajes', 'info');
+        }
+
+        // Gestión de publicaciones mejorada
+        let currentPublicationType = 'news';
+        let uploadedFiles = [];
+
+        function showPublishModal(type) {
+            currentPublicationType = type;
+            const modal = document.getElementById('publishModal');
+            const title = document.getElementById('publishModalTitle');
+            const subtitle = document.getElementById('publishModalSubtitle');
+            const icon = document.getElementById('publishModalIcon');
+            const urlSection = document.getElementById('urlSection');
+            
+            const contentTypes = {
+                news: {
+                    title: 'Publicar Noticia',
+                    subtitle: 'Comparte noticias y comunicados oficiales',
+                    icon: '📰',
+                    color: 'blue'
+                },
+                proposal: {
+                    title: 'Nueva Propuesta Legislativa',
+                    subtitle: 'Presenta una nueva iniciativa o propuesta',
+                    icon: '📋',
+                    color: 'green'
+                },
+                video: {
+                    title: 'Compartir Video',
+                    subtitle: 'Sube videos o comparte enlaces multimedia',
+                    icon: '🎥',
+                    color: 'purple'
+                },
+                image: {
+                    title: 'Compartir Imagen',
+                    subtitle: 'Sube fotos y contenido visual',
+                    icon: '🖼️',
+                    color: 'yellow'
+                },
+                document: {
+                    title: 'Subir Documento',
+                    subtitle: 'Comparte PDFs, informes y documentos oficiales',
+                    icon: '📄',
+                    color: 'red'
+                },
+                event: {
+                    title: 'Crear Evento',
+                    subtitle: 'Anuncia actividades y eventos públicos',
+                    icon: '📅',
+                    color: 'indigo'
+                }
+            };
+            
+            const config = contentTypes[type] || contentTypes.news;
+            title.textContent = config.title;
+            subtitle.textContent = config.subtitle;
+            icon.innerHTML = config.icon;
+            icon.className = `w-12 h-12 bg-${config.color}-500 rounded-lg flex items-center justify-center text-white text-xl`;
+            
+            // Mostrar sección de URL para videos
+            if (type === 'video') {
+                urlSection.classList.remove('hidden');
+            } else {
+                urlSection.classList.add('hidden');
+            }
+            
+            // Configurar vista previa
+            updatePreview();
+            setupFileHandlers();
+            setupPreviewUpdates();
+            
+            modal.classList.remove('hidden');
+        }
+
+        function hidePublishModal() {
+            document.getElementById('publishModal').classList.add('hidden');
+            clearForm();
+        }
+
+        function clearForm() {
+            document.getElementById('publishTitle').value = '';
+            document.getElementById('publishContent').value = '';
+            document.getElementById('publishTags').value = '';
+            document.getElementById('publishUrl').value = '';
+            document.getElementById('filePreview').innerHTML = '';
+            uploadedFiles = [];
+            updatePreview();
+        }
+
+        function setupFileHandlers() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            // Drag and drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-blue-500', 'bg-blue-50');
+            });
+            
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                    showNotification(`El archivo ${file.name} es demasiado grande (máximo 50MB)`, 'error');
+                    return;
+                }
+                
+                uploadedFiles.push(file);
+                addFilePreview(file);
+            });
+        }
+
+        function addFilePreview(file) {
+            const preview = document.getElementById('filePreview');
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-lg';
+            
+            const fileIcon = getFileIcon(file.type);
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            
+            fileDiv.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="text-2xl">${fileIcon}</div>
+                    <div>
+                        <div class="font-medium text-sm">${file.name}</div>
+                        <div class="text-xs text-gray-500">${fileSize} MB</div>
+                    </div>
+                </div>
+                <button onclick="removeFile('${file.name}')" class="text-red-500 hover:text-red-700 text-xl">×</button>
+            `;
+            
+            preview.appendChild(fileDiv);
+        }
+
+        function getFileIcon(fileType) {
+            if (fileType.startsWith('image/')) return '🖼️';
+            if (fileType.startsWith('video/')) return '🎥';
+            if (fileType.includes('pdf')) return '📄';
+            if (fileType.includes('document') || fileType.includes('word')) return '📝';
+            return '📁';
+        }
+
+        function removeFile(fileName) {
+            uploadedFiles = uploadedFiles.filter(file => file.name !== fileName);
+            const preview = document.getElementById('filePreview');
+            Array.from(preview.children).forEach(child => {
+                if (child.textContent.includes(fileName)) {
+                    child.remove();
+                }
+            });
+        }
+
+        function setupPreviewUpdates() {
+            const titleInput = document.getElementById('publishTitle');
+            const contentInput = document.getElementById('publishContent');
+            const tagsInput = document.getElementById('publishTags');
+            const publishNowCheckbox = document.getElementById('publishNow');
+            const scheduleSection = document.getElementById('scheduleSection');
+            
+            titleInput.addEventListener('input', updatePreview);
+            contentInput.addEventListener('input', (e) => {
+                updateContentCounter(e.target.value);
+                updatePreview();
+            });
+            tagsInput.addEventListener('input', updatePreview);
+            
+            publishNowCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    scheduleSection.classList.add('hidden');
+                } else {
+                    scheduleSection.classList.remove('hidden');
+                }
+            });
+        }
+
+        function updateContentCounter(content) {
+            const counter = document.getElementById('contentCounter');
+            counter.textContent = content.length;
+            
+            if (content.length > 500) {
+                counter.classList.add('text-red-500');
+            } else {
+                counter.classList.remove('text-red-500');
+            }
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('publishTitle').value || 'El título aparecerá aquí...';
+            const content = document.getElementById('publishContent').value || 'El contenido aparecerá aquí...';
+            const tags = document.getElementById('publishTags').value;
+            
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewContent').textContent = content;
+            
+            if (currentUser) {
+                const deputy = deputies.find(d => d.id === currentUser);
+                if (deputy) {
+                    document.getElementById('previewAuthor').textContent = deputy.name;
+                }
+            }
+            
+            // Actualizar etiquetas
+            const tagsContainer = document.getElementById('previewTags');
+            tagsContainer.innerHTML = '';
+            if (tags) {
+                tags.split(',').forEach(tag => {
+                    const tagSpan = document.createElement('span');
+                    tagSpan.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs';
+                    tagSpan.textContent = tag.trim();
+                    tagsContainer.appendChild(tagSpan);
+                });
+            }
+        }
+
+        function submitPublication(event) {
+            event.preventDefault();
+            const title = document.getElementById('publishTitle').value;
+            const content = document.getElementById('publishContent').value;
+            const category = document.getElementById('publishCategory').value;
+            const tags = document.getElementById('publishTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const url = document.getElementById('publishUrl').value;
+            
+            if (content.length > 500) {
+                showNotification('El contenido no puede exceder 500 caracteres', 'error');
+                return;
+            }
+            
+            if (!currentUser) {
+                showNotification('Error: Usuario no identificado', 'error');
+                return;
+            }
+            
+            // Crear nueva publicación
+            const newPublication = {
+                id: Date.now(),
+                type: currentPublicationType,
+                title: title,
+                content: content,
+                date: new Date().toISOString(),
+                category: category,
+                tags: tags,
+                url: url || null,
+                files: [...uploadedFiles],
+                views: Math.floor(Math.random() * 100) + 50,
+                likes: Math.floor(Math.random() * 20) + 5
+            };
+            
+            // Agregar a las publicaciones del diputado
+            if (!deputiesData[currentUser].publications) {
+                deputiesData[currentUser].publications = [];
+            }
+            deputiesData[currentUser].publications.push(newPublication);
+            
+            // Agregar archivos a la biblioteca del diputado
+            if (uploadedFiles.length > 0) {
+                if (!deputiesData[currentUser].uploadedFiles) {
+                    deputiesData[currentUser].uploadedFiles = [];
+                }
+                deputiesData[currentUser].uploadedFiles.push(...uploadedFiles);
+            }
+            
+            // Actualizar estadísticas
+            updateDeputyStats(currentUser);
+            
+            // Simular subida de archivos
+            if (uploadedFiles.length > 0) {
+                showNotification(`Subiendo ${uploadedFiles.length} archivo(s)...`, 'info');
+                setTimeout(() => {
+                    showNotification(`"${title}" publicado exitosamente con ${uploadedFiles.length} archivo(s). Los cambios se reflejan en tu perfil público.`, 'success');
+                    // Actualizar vista si está en la sección de diputados
+                    if (currentSection === 'diputados') {
+                        loadDeputies();
+                    }
+                }, 2000);
+            } else {
+                showNotification(`"${title}" publicado exitosamente. Los cambios se reflejan en tu perfil público.`, 'success');
+                // Actualizar vista si está en la sección de diputados
+                if (currentSection === 'diputados') {
+                    loadDeputies();
+                }
+            }
+            
+            hidePublishModal();
+        }
+
+        // Funciones auxiliares para el perfil mejorado
+        function getPublicationIcon(type) {
+            const icons = {
+                news: '📰',
+                proposal: '📋',
+                video: '🎥',
+                image: '🖼️',
+                document: '📄',
+                event: '📅'
+            };
+            return icons[type] || '📝';
+        }
+
+        function getPublicationType(type) {
+            const types = {
+                news: 'Noticia',
+                proposal: 'Propuesta',
+                video: 'Video',
+                image: 'Imagen',
+                document: 'Documento',
+                event: 'Evento'
+            };
+            return types[type] || 'Publicación';
+        }
+
+        function filterPublications(type, deputyId) {
+            const buttons = document.querySelectorAll('.pub-filter-btn');
+            const publications = document.querySelectorAll('.publication-item');
+            
+            // Actualizar botones
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-100', 'text-gray-700');
+            event.target.classList.add('bg-blue-500', 'text-white');
+            
+            // Filtrar publicaciones
+            publications.forEach(pub => {
+                if (type === 'all' || pub.dataset.type === type) {
+                    pub.style.display = 'block';
+                } else {
+                    pub.style.display = 'none';
+                }
+            });
+        }
+
+        function loadMorePublications(deputyId) {
+            showNotification('Cargando más publicaciones...', 'info');
+            // Aquí se cargarían más publicaciones
+        }
+
+        function downloadFile(fileName) {
+            showNotification(`Descargando ${fileName}...`, 'info');
+            // Simular descarga
+            setTimeout(() => {
+                showNotification(`${fileName} descargado correctamente`, 'success');
+            }, 1500);
+        }
+
+        function showAllFiles(deputyId) {
+            const deputy = deputiesData[deputyId];
+            if (!deputy || !deputy.uploadedFiles) return;
+            
+            showNotification(`Mostrando todos los archivos de ${deputy.name}`, 'info');
+        }
+
+        function shareProfile(deputyId) {
+            const deputy = deputiesData[deputyId];
+            if (!deputy) return;
+            
+            // Simular compartir perfil
+            if (navigator.share) {
+                navigator.share({
+                    title: `Perfil de ${deputy.name}`,
+                    text: `Conoce el trabajo de ${deputy.name} en el Congreso de Baja California`,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback para navegadores que no soportan Web Share API
+                const url = window.location.href;
+                navigator.clipboard.writeText(url).then(() => {
+                    showNotification('Enlace del perfil copiado al portapapeles', 'success');
+                });
+            }
+        }
+
+        function subscribeToUpdates(deputyId) {
+            const deputy = deputiesData[deputyId];
+            if (!deputy) return;
+            
+            showNotification(`Te has suscrito a las actualizaciones de ${deputy.name}`, 'success');
+        }
+
+        // Funciones para gestión de perfil
+        function saveProfileChanges() {
+            if (!currentUser) {
+                showNotification('Error: Usuario no identificado', 'error');
+                return;
+            }
+            
+            const customBio = document.getElementById('customBioInput').value.trim();
+            const twitterLink = document.getElementById('twitterLink').value.trim();
+            const facebookLink = document.getElementById('facebookLink').value.trim();
+            const linkedinLink = document.getElementById('linkedinLink').value.trim();
+            
+            // Actualizar datos del diputado
+            if (customBio) {
+                deputiesData[currentUser].customBio = customBio;
+            }
+            
+            // Actualizar enlaces sociales
+            deputiesData[currentUser].socialLinks = {};
+            if (twitterLink) deputiesData[currentUser].socialLinks.twitter = twitterLink;
+            if (facebookLink) deputiesData[currentUser].socialLinks.facebook = facebookLink;
+            if (linkedinLink) deputiesData[currentUser].socialLinks.linkedin = linkedinLink;
+            
+            showNotification('Perfil actualizado correctamente. Los cambios se reflejan en tu perfil público.', 'success');
+            
+            // Actualizar vista si está en la sección de diputados
+            if (currentSection === 'diputados') {
+                loadDeputies();
+            }
+        }
+
+        function previewPublicProfile() {
+            if (!currentUser) {
+                showNotification('Error: Usuario no identificado', 'error');
+                return;
+            }
+            
+            showDeputyProfile(currentUser);
+        }
+
+        function showMyPublications() {
+            if (!currentUser) {
+                showNotification('Error: Usuario no identificado', 'error');
+                return;
+            }
+            
+            const deputy = deputiesData[currentUser];
+            const publications = deputy.publications || [];
+            
+            if (publications.length === 0) {
+                showNotification('Aún no tienes publicaciones. ¡Crea tu primera publicación!', 'info');
+                return;
+            }
+            
+            // Crear modal para mostrar publicaciones
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+                    <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-2xl font-bold">Mis Publicaciones (${publications.length})</h2>
+                            <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-3xl">×</button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            ${publications.reverse().map(pub => `
+                                <div class="bg-gray-50 p-6 rounded-lg border">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div class="flex-1">
+                                            <h3 class="font-bold text-lg mb-1">${pub.title}</h3>
+                                            <div class="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                                                <span class="bg-${deputy.color}-100 text-${deputy.color}-800 px-2 py-1 rounded text-xs">${pub.type}</span>
+                                                <span>${formatDate(pub.date)}</span>
+                                                <span>👁️ ${pub.views}</span>
+                                                <span>👍 ${pub.likes}</span>
+                                            </div>
+                                        </div>
+                                        <button onclick="deletePublication(${pub.id})" class="text-red-500 hover:text-red-700 text-sm">🗑️ Eliminar</button>
+                                    </div>
+                                    <p class="text-gray-700 mb-3">${pub.content}</p>
+                                    ${pub.tags.length > 0 ? `
+                                        <div class="flex flex-wrap gap-2 mb-3">
+                                            ${pub.tags.map(tag => `<span class="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">${tag}</span>`).join('')}
+                                        </div>
+                                    ` : ''}
+                                    ${pub.files.length > 0 ? `
+                                        <div class="text-sm text-blue-600">📎 ${pub.files.length} archivo(s) adjunto(s)</div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function deletePublication(publicationId) {
+            if (!currentUser) return;
+            
+            if (confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+                deputiesData[currentUser].publications = deputiesData[currentUser].publications.filter(pub => pub.id !== publicationId);
+                showNotification('Publicación eliminada correctamente', 'success');
+                
+                // Cerrar modal y reabrir
+                document.querySelector('.fixed').remove();
+                showMyPublications();
+                
+                // Actualizar vista si está en la sección de diputados
+                if (currentSection === 'diputados') {
+                    loadDeputies();
+                }
+            }
+        }
+
+        function updateDeputyStats(deputyId) {
+            // Actualizar estadísticas del diputado basadas en sus publicaciones
+            const deputy = deputiesData[deputyId];
+            if (deputy && deputy.publications) {
+                // Simular incremento de estadísticas
+                deputy.initiatives = deputy.publications.filter(pub => pub.type === 'proposal').length;
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) return 'Hace 1 día';
+            if (diffDays < 7) return `Hace ${diffDays} días`;
+            if (diffDays < 30) return `Hace ${Math.ceil(diffDays / 7)} semana(s)`;
+            return date.toLocaleDateString('es-ES');
+        }
+
+        function loadProfileData() {
+            if (!currentUser) return;
+            
+            const deputy = deputiesData[currentUser];
+            if (!deputy) return;
+            
+            // Cargar datos en los campos de edición
+            document.getElementById('customBioInput').value = deputy.customBio || '';
+            document.getElementById('twitterLink').value = deputy.socialLinks?.twitter || '';
+            document.getElementById('facebookLink').value = deputy.socialLinks?.facebook || '';
+            document.getElementById('linkedinLink').value = deputy.socialLinks?.linkedin || '';
+        }
+
+        function saveDraft() {
+            const title = document.getElementById('publishTitle').value;
+            if (title) {
+                showNotification(`Borrador "${title}" guardado`, 'success');
+            } else {
+                showNotification('Borrador guardado', 'success');
+            }
+        }
+
+        // Funciones para subida rápida
+        function showQuickUpload() {
+            document.getElementById('quickUploadModal').classList.remove('hidden');
+            setupQuickUploadHandlers();
+        }
+
+        function hideQuickUpload() {
+            document.getElementById('quickUploadModal').classList.add('hidden');
+            document.getElementById('quickFileList').innerHTML = '';
+        }
+
+        function setupQuickUploadHandlers() {
+            const quickDropZone = document.getElementById('quickDropZone');
+            const quickFileInput = document.getElementById('quickFileInput');
+            
+            quickDropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                quickDropZone.classList.add('border-blue-500');
+            });
+            
+            quickDropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                quickDropZone.classList.remove('border-blue-500');
+            });
+            
+            quickDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                quickDropZone.classList.remove('border-blue-500');
+                handleQuickFiles(e.dataTransfer.files);
+            });
+            
+            quickFileInput.addEventListener('change', (e) => {
+                handleQuickFiles(e.target.files);
+            });
+        }
+
+        function handleQuickFiles(files) {
+            const fileList = document.getElementById('quickFileList');
+            fileList.innerHTML = '';
+            
+            Array.from(files).forEach(file => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-lg';
+                fileDiv.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="text-xl">${getFileIcon(file.type)}</div>
+                        <div>
+                            <div class="font-medium text-sm">${file.name}</div>
+                            <div class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        </div>
+                    </div>
+                    <div class="text-green-600 text-sm">✓ Listo</div>
+                `;
+                fileList.appendChild(fileDiv);
+            });
+        }
+
+        function processQuickUpload() {
+            const fileList = document.getElementById('quickFileList');
+            const fileCount = fileList.children.length;
+            
+            if (fileCount > 0) {
+                showNotification(`${fileCount} archivo(s) subido(s) a tu biblioteca`, 'success');
+                hideQuickUpload();
+            } else {
+                showNotification('Selecciona archivos para subir', 'error');
+            }
+        }
+
+        // Funciones para biblioteca de contenido
+        function showContentLibrary() {
+            document.getElementById('contentLibraryModal').classList.remove('hidden');
+            loadLibraryContent();
+        }
+
+        function hideContentLibrary() {
+            document.getElementById('contentLibraryModal').classList.add('hidden');
+        }
+
+        function loadLibraryContent() {
+            const grid = document.getElementById('libraryGrid');
+            
+            // Contenido de ejemplo
+            const libraryItems = [
+                { type: 'image', name: 'Sesión Plenaria Nov 2024.jpg', date: '2024-11-15', size: '2.3 MB' },
+                { type: 'video', name: 'Propuesta Educativa.mp4', date: '2024-11-12', size: '15.7 MB' },
+                { type: 'document', name: 'Informe Trimestral.pdf', date: '2024-11-10', size: '1.8 MB' },
+                { type: 'image', name: 'Reunión Ciudadana.jpg', date: '2024-11-08', size: '3.1 MB' },
+                { type: 'document', name: 'Propuesta Ley Ambiental.pdf', date: '2024-11-05', size: '4.2 MB' },
+                { type: 'video', name: 'Conferencia Prensa.mp4', date: '2024-11-03', size: '22.1 MB' }
+            ];
+            
+            grid.innerHTML = libraryItems.map(item => `
+                <div class="library-item bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-all" data-type="${item.type}">
+                    <div class="text-center mb-3">
+                        <div class="text-4xl mb-2">${getFileIcon(item.type)}</div>
+                        <div class="font-medium text-sm text-gray-800 truncate">${item.name}</div>
+                    </div>
+                    <div class="text-xs text-gray-500 text-center">
+                        <div>${item.date}</div>
+                        <div>${item.size}</div>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <button onclick="useLibraryItem('${item.name}')" class="flex-1 bg-blue-500 text-white text-xs py-1 rounded hover:bg-blue-600">
+                            Usar
+                        </button>
+                        <button onclick="deleteLibraryItem('${item.name}')" class="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterLibrary(type) {
+            const items = document.querySelectorAll('.library-item');
+            const buttons = document.querySelectorAll('.library-filter');
+            
+            // Actualizar botones
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-100', 'text-gray-700');
+            event.target.classList.add('bg-blue-500', 'text-white');
+            
+            // Filtrar elementos
+            items.forEach(item => {
+                if (type === 'all' || item.dataset.type === type) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function useLibraryItem(itemName) {
+            showNotification(`"${itemName}" agregado a tu publicación`, 'success');
+            hideContentLibrary();
+        }
+
+        function deleteLibraryItem(itemName) {
+            if (confirm(`¿Eliminar "${itemName}" de tu biblioteca?`)) {
+                showNotification(`"${itemName}" eliminado`, 'success');
+                loadLibraryContent();
+            }
+        }
+
+        function showContentWizard() {
+            showNotification('Asistente de contenido próximamente disponible', 'info');
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('inicio');
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9866a48aa72ef949',t:'MTc1OTA5ODE4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
